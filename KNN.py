@@ -1,28 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from getCleanDataset import getCleanDataset
-
-# 判斷是否為Engineer職位
 
 # 讀取資料
-data_df = getCleanDataset()
+# 載入資料
+df = pd.read_excel("./processed_data.xlsx", sheet_name='Sheet1', usecols="A:I")
 
-# 只留下 job_title, salary_in_usd, 以及job_title的dummy variables
-data_df = data_df.drop(labels=['work_year', 'experience_level', 'employment_type', 'employee_residence', 'company_location', 'company_size'], axis=1)
-dummy = pd.get_dummies(data_df['job_title'])
-data_df = pd.concat([data_df, dummy], axis=1)
-data_df = data_df.drop(labels=['job_title'], axis=1)
-
-# 加一個欄位表示是否為Engineer職位
-# 檢查該列的Key是否包含engineer並且值為1
-data_df = data_df.assign(is_engineer = lambda x: (x.filter(like='Engineer').eq(1).any(1)).astype(int))
-
-print(data_df)
+# qcut salary_in_usd
+df['salary_in_usd_level'] = pd.qcut(df['salary_in_usd'], q=2, labels=False)
 
 # 定義 X 和 Y
-X = data_df.drop(labels=['is_engineer'] ,axis=1)
-y = data_df['is_engineer'].values
+X = df.drop(labels=['salary_in_usd_level'] ,axis=1)
+y = df['salary_in_usd_level'].values
 
 # 進行資料集分類
 from sklearn.model_selection import train_test_split
@@ -51,6 +40,15 @@ y_pred = classifier.predict(X_test)
 print('訓練集: ', classifier.score(X_train,y_train))
 print('測試集: ', classifier.score(X_test,y_test))
 
+# 混淆局鎮
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, classifier.predict(X_test))
+print(cm)
+
+# Precision, Recall, F1-scroe  
+from sklearn.metrics import classification_report
+print(classification_report(y_test, classifier.predict(X_test)))
+
 ## 匯出圖表 
 from mlxtend.plotting import plot_decision_regions
 
@@ -60,3 +58,22 @@ plt.ylabel('y_train')
 plt.legend(loc='upper left')
 plt.tight_layout()
 plt.show()
+
+# AUC, ROC
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+fpr, tpr, thresholds = roc_curve(y_test, classifier.predict(X_test))
+roc_auc = auc(fpr, tpr)
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=1, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=1, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
+
+# AUC number
+print(roc_auc)
