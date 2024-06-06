@@ -42,12 +42,21 @@ print('測試集: ', classifier.score(X_test,y_test))
 
 # 混淆局鎮
 from sklearn.metrics import confusion_matrix
+print("訓練集：")
+cm = confusion_matrix(y_train, classifier.predict(X_train))
+print(cm)
+
+print("測試集：")
 cm = confusion_matrix(y_test, classifier.predict(X_test))
 print(cm)
 
 # Precision, Recall, F1-scroe  
 from sklearn.metrics import classification_report
+print("訓練集：")
+print(classification_report(y_train, classifier.predict(X_train)))
+print("測試集：")
 print(classification_report(y_test, classifier.predict(X_test)))
+
 
 ## 匯出圖表 
 from mlxtend.plotting import plot_decision_regions
@@ -62,6 +71,23 @@ plt.show()
 # AUC, ROC
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
+
+# 訓練集
+fpr, tpr, thresholds = roc_curve(y_train, classifier.predict(X_train))
+roc_auc = auc(fpr, tpr)
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=1, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=1, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
+print(roc_auc)
+
+# 測試集
 fpr, tpr, thresholds = roc_curve(y_test, classifier.predict(X_test))
 roc_auc = auc(fpr, tpr)
 plt.figure()
@@ -74,6 +100,4 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
 plt.show()
-
-# AUC number
 print(roc_auc)
